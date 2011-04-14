@@ -1,0 +1,21 @@
+Dependencies:
+    youtube-dl
+    ffmpeg
+    libmp3lame codec
+
+getMusicReddit:
+    Pulls all youtube links from /r/listentothis (or specified site)
+    Outputs the links to a file called Music 
+    If download and convert desired, call youtube2mp3.sh
+
+youtube2mp3:
+    Converts youtube link to mp3 by calling youtube-dl and ffmpeg (dependencies) 
+    Can have a file with multiple youtube links for batch conversion
+    Default directory to output is /home/ngoke/Downloads/Music/youtube2mp3
+    Able to specify different username or directoty
+
+Usages:
+    Use getMusicReddit.py to fetch links and then call youtube2mp3 on Music to download all
+    Use youtube2mp3 on a single YouTube link to download .mp3
+    Use youtube2mp3 on many links placed in a regular file to batch download 
+
