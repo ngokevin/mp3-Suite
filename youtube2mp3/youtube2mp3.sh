@@ -29,8 +29,10 @@ function toMP3 {
     rm $x
 
     mv $finaltitle $dir$finaltitle
+    spacetitle=$dir"`(echo $finaltitle | sed 's/_/\\ /g')`"
+    mv $dir$finaltitle "$spacetitle"
 
-    if [ -f $dir$finaltitle ]
+    if [ -f "$spacetitle" ]
     then
         echo "$prefix converted!"
     else
