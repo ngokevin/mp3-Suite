@@ -2,53 +2,61 @@
 # Downloads .mp3 from YouTube using youtube-dl and ffmpeg
 # Supports batch download from regular file 
 # Recommended to split large batch files. Script makes a process for each link and too many at once may buckle something.
-# Usage: youtube2mp3 ["youtube-link"][FILE WITH LINKS][OUTPUT DIR]
+# Usage: youtube2mp3 ["youtube-link" | FILE WITH LINKS] [OUTPUT DIR]
+
+download_dir="/home/ngoke/Downloads/Music/youtube2mp3/"
+to_convert=$1
+specified_dir=$2
 
 function toMP3 {
-
-    echo "Converting $1..."
-
-    # Downloads video (.flv)
-    x=~/.youtube-dl.$RANDOM-$RANDOM.flv
-    python youtube-dl --output=$x --format=18 "$1"
     
+    dir=$2
+
     # Gets title of video to appropriately name the .mp3 output
     prefix=`youtube-dl -e "$1"`
     suffix=".mp3"
     title=$prefix$suffix
     finaltitle=`(echo $title | sed -E 's/ /_/g')`
 
+    echo "Converting $prefix"
+
+    # Downloads video (.flv)
+    x=~/.youtube-dl.$RANDOM-$RANDOM.flv
+    youtube-dl --output=$x --format=18 "$1"
+
     # Convert to .mp3
     ffmpeg -i $x -acodec libmp3lame -ac 2 -ab 128k -vn -y $finaltitle
     rm $x
 
-    mv $finaltitle "$2$finaltitle" 
+    mv $finaltitle $dir$finaltitle
 
-    echo "$1 converted!"
+    if [ -f $dir$finaltitle ]
+    then
+        echo "$prefix converted!"
+    else
+        echo "Error!"
+    fi
 }
 
-# Default output directory
+# If no output directory given, use default output directory
 if test $# -eq 1
 then
-    default=1
+    use_default_dir=1
 fi
 
-if [ ! -d /home/ngoke/Downloads/Music/youtube2mp3 ];
+if [ ! -d $download_dir ];
 then
-    mkdir /home/ngoke/Downloads/Music/youtube2mp3
+    mkdir $download_dir
 fi
-
-
-dir="/home/ngoke/Downloads/Music/youtube2mp3/"
 
 # Convert all if batch download file found
-if test -f $1 
+if test -f $to_convert 
 then   
 
-    echo "$1 found"
+    echo "$to_convert found"
     
     # Loop through each link in file
-    for line in $(cat $1)
+    for line in $(cat $to_convert)
     do
         #Check to see if song does not already exist
         prefix=`youtube-dl -e "$line"`
@@ -61,11 +69,11 @@ then
 
         if [ ! -f $title ]
         then
-            if test $default -eq 1
+            if test $use_default_dir -eq 1
             then
-              toMP3 $line "/home/ngoke/Downloads/Music/youtube2mp3/" &
+              toMP3 $line $download_dir &
             else
-              toMP3 $line $2 & 
+              toMP3 $line $specified_dir & 
             fi  
         else
             echo "$prefix$suffix already exists"
@@ -73,18 +81,17 @@ then
     done
 
     # Empty file
-    cat /dev/null > $1
+    cat /dev/null > $to_convert
 
 # Convert if single link given
 else
-    if test $default -eq 1
+    if test $use_default_dir -eq 1
     then
-        toMP3 $1 "/home/ngoke/Downloads/Music/youtube2mp3/"
+        toMP3 $to_convert $download_dir &
     else
-        toMP3 $1 $2
+        toMP3 $to_convert $specified_dir &
     fi
 fi
 
-echo "Done!"
 exit
 
