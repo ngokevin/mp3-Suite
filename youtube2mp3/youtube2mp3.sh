@@ -58,18 +58,17 @@ then
     echo "$to_convert found"
     
     # Loop through each link in file
-    for line in $(cat $to_convert)
+    for line in $(cat $to_convert | sort | uniq)
     do
         #Check to see if song does not already exist
         prefix=`youtube-dl -e "$line"`
         suffix=".mp3"
         title=$prefix$suffix
-        title=`(echo $title | sed -E 's/ /_/g')`
-        title=$dir$title
+        title="$dir$title"
 
         echo "Converting $prefix"
 
-        if [ ! -f $title ]
+        if [ ! -f "$title" ]
         then
             if test $use_default_dir -eq 1
             then
