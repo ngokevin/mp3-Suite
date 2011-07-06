@@ -35,7 +35,7 @@ if __name__ == '__main__':
     print "\n" + str(len(li)) + " links found\n"
     print str(li) + "\n"
 
-    fd = open("Music", "a")
+    fd = open("reddit-links", "a")
     for link in li:
         fd.write(link + "\n");
     fd.close()

@@ -12,7 +12,8 @@ if __name__ == '__main__':
     finalLinkList = []
     for link in linkList:
         link = ''.join(["http://youtube.com", link])
-        finalLinkList.append(link)                          
+        if link not in finalLinkList:
+            finalLinkList.append(link)                          
  
     print finalLinkList
     print "\n"
