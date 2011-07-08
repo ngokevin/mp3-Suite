@@ -8,6 +8,7 @@ import cookielib
 from optparse import OptionParser
 
 def upload(username, password, filename):
+    """ uploads a file (via url) to rapidshare. returns status message """
 
     # compose url for api call
     request_url = "http://api.rapidshare.com/cgi-bin/rsapi.cgi?sub=remotegets"
@@ -21,6 +22,7 @@ def upload(username, password, filename):
     return response.read()
 
 def getFileLinks(username, password):
+    """ get list of all files as download links currently within rapidshare account """
 
     # compose url for api call
     request_url = "http://api.rapidshare.com/cgi-bin/rsapi.cgi?sub=listfiles"
@@ -45,7 +47,25 @@ def getFileLinks(username, password):
 
     return final
 
+def deleteFile(username, password, fileid):
+    """ deletes a file from rapidshare account given fileid """
+    
+    cookie_jar = cookielib.MozillaCookieJar()
+    opener = urllib2.build_opener (urllib2.HTTPCookieProcessor(cookie_jar), urllib2.HTTPHandler())
+    urllib2.install_opener(opener)
+
+    # compose url for api call
+    request_url = "http://api.rapidshare.com/cgi-bin/rsapi.cgi?sub=deletefiles"
+    request_url += "&login=" + username
+    request_url += "&password=" + password
+    request_url += "&files=" + fileid
+
+    request = urllib2.Request(request_url)
+    response = opener.open(request)
+    return response.read()
+
 def uploadAndGetLinks(username, password, filename=''):
+    """ uploads a file and gets updated link list """
 
     cookie_jar = cookielib.MozillaCookieJar()
     opener = urllib2.build_opener (urllib2.HTTPCookieProcessor(cookie_jar), urllib2.HTTPHandler())
