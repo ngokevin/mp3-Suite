@@ -1,28 +1,29 @@
 Dependencies:
     youtube-dl
     ffmpeg
-    libmp3lame codec
+    libmp3lame codec (install from ffmpeg extras packages)
 
-getMusicReddit:
-    Pulls all youtube links from /r/listentothis (or any other specified site, but this was my main usage)
-    Outputs the links to a file called Music 
-    If download and convert desired, call youtube2mp3.sh
+scrapeSite:
+    Scrapes all youtube links from a webpage 
+    Outputs the links to a flat file called Music (list of youtube links)
+    If download and convert desired, call youtube2mp3.sh to batch download all
+    My main usage for this was to scrape youtube links from reddit.com/r/listentothis and feed it into youtube2mp3 to download all the songs.
 
-getMusicHTML:
-    Get all Youtube links from an HTML (or any) file and download them all
-    Useful to copy someone's YouTube page to get all of their songs at once
+scrapeFile:
+    Opens a file and scrapes all youtube links off of file and outputs link
+    to a flat file called Music
+    My main usage for this was to save a Youtuber's HTML page to download all of their songs
 
 youtube2mp3:
-    Remember to first change the default download directory within the source
     Converts youtube link to mp3 by calling youtube-dl and ffmpeg (dependencies) 
-    Can have a file with multiple youtube links for batch conversion
-    Able to specify different username or directory
+    Remember to first change the default download directory within the source
+    Can have open a flat file with multiple youtube links for batch conversion
 
-Usages:
-    Use getMusicReddit.py to fetch links and then call youtube2mp3 on Music to download all
-    Use youtube2mp3 on a single YouTube link to download .mp3
-    Use youtube2mp3 on many links placed in a regular file to batch download 
+presto.sh:
+    My whole usage for this suite was to scrape reddit.com/r/listentothis everyday to populate my music library. With presto, I can give back to the site. It tarballs
+files downloaded today (by checking the last_modified), uploads it to Rapidshare via their API, and posts the Rapidshare links to Reddit via the Reddit API.
 
-Example:
-    python getMusicReddit.py
-    ./youtube2mp3 Music
+Examples:
+    python scrapeSite.py && ./youtube2mp3 Music
+    python scrapeSite.py 'reddit.com/r/music' && ./youtube2mp3 Music
+    python scrapeFile.py myFile && ./youtube2mp3 Music

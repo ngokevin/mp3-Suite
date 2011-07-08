@@ -3,7 +3,7 @@ import re
 import subprocess
 
 if __name__ == '__main__':
-    """ Get Youtube links from a Youtuber's page HTML and spits out a file of YouTube links"""
+    """ Scrapes a file for youtube links and outputs to a flat file """
 
     fd = open(sys.argv[1], 'r')
 

@@ -3,9 +3,11 @@ import sys
 import re
 import subprocess
 
-""" Example formats for Reddit's URLs
- http://www.reddit.com/r/listentothis/top/?t=day
- http://www.reddit.com/r/listentothis/top/?t=week#page=2
+""" 
+ Scrapes a webpage for YouTube links and outputs to file. 
+ Example formats for Reddit's URLs
+    http://www.reddit.com/r/listentothis/top/?t=day
+    http://www.reddit.com/r/listentothis/top/?t=week#page=2
  Usage: python getMusicReddit.py [LINK] [week]
 """
 
