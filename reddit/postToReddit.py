@@ -25,7 +25,6 @@ def post_submission(kind, subreddit, title, post):
     request = urllib2.Request(url, form_data)
     response = opener.open(request)
     return response.read()
-     
 
 if __name__ == '__main__':
 
@@ -41,6 +40,8 @@ if __name__ == '__main__':
                         default="", dest="title")
     parser.add_option("-l", "--link", help="link to post or text if self post",
                         default="", dest="post")
+    parser.add_option("-k", "--kind", help="self or link",
+                        default="self", dest="kind")
     (options, args) = parser.parse_args()
 
     cookie_jar = cookielib.MozillaCookieJar()
@@ -48,6 +49,6 @@ if __name__ == '__main__':
     urllib2.install_opener(opener)
 
     response = login(options.username, options.password)
-    response = post_submission('self', 'polljacking', 'test', 'test post')
+    response = post_submission(options.self, options.subreddit, options.title, options.link)
     print response
     
