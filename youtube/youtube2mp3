@@ -4,13 +4,27 @@
 # Recommended to split large batch files. Script makes a process for each link and too many at once may buckle something.
 # Usage: youtube2mp3 ["youtube-link" | FILE WITH LINKS] [OUTPUT DIR]
 
+# command line arguments to specify directory if desired
 download_dir="/home/ngoke/Downloads/Music/youtube2mp3/"
-to_convert=$1
-specified_dir=$2
+while getopts ":d" opt; do
+    case $opt in
+        d)
+            if [ -n $OPTARG ]
+            then
+                download_dir=$OPTARG
+            fi;;
+        \?)
+            echo "Invalid option: -$OPTARG\n"
+            echo "-d: download directory\n"
+            exit 1;;
+    esac
+done
+to_convert=${!#}
 
+# download and convert
 function toMP3 {
     
-    dir=$2
+    dir=$download_dir
 
     # Gets title of video to appropriately name the .mp3 output
     prefix=`youtube-dl -e "$1"`
@@ -40,12 +54,6 @@ function toMP3 {
     fi
 }
 
-# If no output directory given, use default output directory
-if test $# -eq 1
-then
-    use_default_dir=1
-fi
-
 if [ ! -d $download_dir ];
 then
     mkdir $download_dir
@@ -70,12 +78,7 @@ then
 
         if [ ! -f "$title" ]
         then
-            if test $use_default_dir -eq 1
-            then
-              toMP3 $line $download_dir &
-            else
-              toMP3 $line $specified_dir & 
-            fi  
+            toMP3 $line $download_dir &
         else
             echo "$prefix$suffix already exists"
         fi
@@ -86,12 +89,7 @@ then
 
 # Convert if single link given
 else
-    if test $use_default_dir -eq 1
-    then
-        toMP3 $to_convert $download_dir &
-    else
-        toMP3 $to_convert $specified_dir &
-    fi
+    toMP3 $to_convert $download_dir &
 fi
 
 exit

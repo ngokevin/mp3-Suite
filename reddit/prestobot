@@ -1,14 +1,39 @@
 #! /bin/sh
-# Creates tarball, uploads to filevo, and posts to Reddit. Main method for whole process
+# Creates tarball, uploads to filevo, and posts to Reddit. Main method for whole process. 
 
-download_dir="/home/ngoke/Downloads/Music/youtube2mp3/"
-host=""
-python_dir="/usr/local/bin/"
-rapid_username=""
-rapid_password=""
-reddit_username=""
-reddit_password=""
-subreddit=""
+while getopts ":a:b:c:d:h:l:s:p:" opt; do
+    case $opt in
+        a)
+            rapid_username=$OPTARG;;
+        b)
+            rapid_password=$OPTARG;;
+        c)
+            reddit_username=$OPTARG;;
+        d) 
+            reddit_password=$OPTARG;;
+        h)
+            host=$OPTARG;;
+        l)
+            download_dir=$OPTARG;;
+        s)
+            subreddit=$OPTARG;;
+        p)
+            python_dir=$OPTARG;;
+        \?)
+            echo "Invalid option: -$OPTARG\n"
+            echo "-a: rapidshare username\n"
+            echo "-b: rapidshare pw\n"
+            echo "-c: reddit username\n"
+            echo "-d: reddit username\n"
+            echo "-h: host url path to file\n"
+            echo "-l: local path to file\n"
+            echo "-s: subreddit to post to\n"
+            echo "-p: python path\n"
+            exit 1;;
+        :)
+            echo "OPTION -$OPTARG requires an argument"
+            exit 1;;
+        esac
 
 cd $download_dir
 date=`date +%F`                                        
