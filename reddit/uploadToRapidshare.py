@@ -75,11 +75,22 @@ def uploadAndGetLinks(username, password, filename=''):
     if filename:
         response = upload(username, password, filename)
 
+    # make sure it finishes before grab link
+    time.sleep(900)
+
     # get all current links
     links = getFileLinks(username, password)
+    links = format_links(links)
     return links
-    
 
+def format_links(links):
+    """ format list into string """
+    
+    string = ""
+    for link in links:
+        string += link + '\n'
+    return string
+        
 if __name__ == '__main__':
 
     # get current date in y-m-d format as a default option for filename

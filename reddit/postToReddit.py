@@ -49,6 +49,6 @@ if __name__ == '__main__':
     urllib2.install_opener(opener)
 
     response = login(options.username, options.password)
-    response = post_submission(options.self, options.subreddit, options.title, options.link)
+    response = post_submission(options.kind, options.subreddit, options.title, options.post)
     print response
     
