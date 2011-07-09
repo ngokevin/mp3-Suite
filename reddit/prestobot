@@ -33,7 +33,8 @@ while getopts ":a:b:c:d:h:l:s:p:" opt; do
         :)
             echo "OPTION -$OPTARG requires an argument"
             exit 1;;
-        esac
+    esac
+done
 
 cd $download_dir
 date=`date +%F`                                        
@@ -54,6 +55,4 @@ My name is prestobot, a set of scripts that scrapes the front page of a subreddi
 $links"
 
 python "${python_dir}postToReddit.py" -u $reddit_username -p $reddit_password -s $subreddit -k "self" -t "prestobot $date: download link to today's top songs for $subreddit" -l $post
-
-
 
