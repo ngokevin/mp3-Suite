@@ -89,7 +89,8 @@ def format_links(links):
     
     string = ""
     for link in links:
-        string += link + '\n'
+        string += link + '''    
+'''
     return string
         
 if __name__ == '__main__':
