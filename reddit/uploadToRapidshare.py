@@ -45,6 +45,7 @@ def getFileLinks(username, password):
         link = "https://rapidshare.com/files/" + link[0] + "/" + link[1] 
         final.append(link)
 
+    final.reverse()
     return final
 
 def deleteFile(username, password, fileid):
