@@ -65,7 +65,7 @@ def deleteFile(username, password, fileid):
     response = opener.open(request)
     return response.read()
 
-def uploadAndGetLinks(username, password, filename=''):
+def uploadAndGetLinks(username, password, filename='', sleep=True):
     """ uploads a file and gets updated link list """
 
     cookie_jar = cookielib.MozillaCookieJar()
@@ -77,7 +77,8 @@ def uploadAndGetLinks(username, password, filename=''):
         response = upload(username, password, filename)
 
     # make sure it finishes before grab link
-    time.sleep(900)
+    if sleep is True:
+        time.sleep(900)
 
     # get all current links
     links = getFileLinks(username, password)
@@ -107,10 +108,12 @@ if __name__ == '__main__':
                         default="", dest="password")
     parser.add_option("-f", "--filename", help="file to upload (full path)",
                         default=date+'.tar', dest="filename")
+    parser.add_option("-s", "--sleep", help="sleep during upload and before returning links",
+                        default=True, dest="sleep")
     (options, args) = parser.parse_args()
 
     cookie_jar = cookielib.MozillaCookieJar()
     opener = urllib2.build_opener (urllib2.HTTPCookieProcessor(cookie_jar), urllib2.HTTPHandler())
     urllib2.install_opener(opener)
 
-    print uploadAndGetLinks(options.username, options.password, options.filename)
+    print uploadAndGetLinks(options.username, options.password, options.filename, options.sleep)
