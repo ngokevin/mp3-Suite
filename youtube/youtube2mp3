@@ -4,7 +4,7 @@
 # Usage: youtube2mp3 -d DOWNLOAD_DIR -t THREAD [ youtube link || list of youtube links ]
 
 # command line arguments to specify directory if desired
-download_dir="/home/ngoke/Downloads/MusicDL/youtube2mp3/"
+download_dir="/home/ngoke/Downloads/Music/youtube2mp3/"
 thread=1
 while getopts ":d:t:" opt; do
     case $opt in
