@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 # Downloads .mp3 from YouTube using youtube-dl and ffmpeg
 # Supports batch download from regular file 
 # Usage: youtube2mp3 -d DOWNLOAD_DIR -t THREAD [ youtube link || list of youtube links ]
@@ -6,6 +6,7 @@
 # command line arguments to specify directory if desired
 download_dir="/home/ngoke/Downloads/Music/youtube2mp3/"
 thread=1
+to_convert=${!#}
 while getopts ":d:t:" opt; do
     case $opt in
         d)
@@ -23,13 +24,6 @@ while getopts ":d:t:" opt; do
             exit 1;;
     esac
 done
-to_convert=${!#}
-
-if [ $# -eq 0 ]
-then
-    echo "Usage: youtube2mp3 -d DOWNLOAD_DIR -t THREAD [ youtube link || list of youtube links ]"
-    exit 1;
-fi
 
 # download and convert
 function toMP3 {
@@ -63,6 +57,12 @@ function toMP3 {
         echo "Error!"
     fi
 }
+
+if [ $# -eq 0 ];
+then
+    echo "Usage: youtube2mp3 -d DOWNLOAD_DIR -t THREAD [ youtube link || list of youtube links ]"
+    exit 1;
+fi
 
 if [ ! -d $download_dir ];
 then
