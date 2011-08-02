@@ -1,4 +1,4 @@
-# /bin/sh
+#! /bin/sh
 # Downloads .mp3 from YouTube using youtube-dl and ffmpeg
 # Supports batch download from regular file 
 # Usage: youtube2mp3 -d DOWNLOAD_DIR -t THREAD [ youtube link || list of youtube links ]
