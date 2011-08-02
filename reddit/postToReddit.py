@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Posts a thread on Reddit (options for subreddit, link title, text)
 
 import datetime

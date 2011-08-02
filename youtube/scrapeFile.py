@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 import re
 import subprocess
@@ -20,7 +22,7 @@ if __name__ == '__main__':
     print str(len(finalLinkList)) + " links found\n"
 
     fd.close()
-    fd = open("Music", "a")
+    fd = open("MusicDL", "a")
     for link in finalLinkList:
         fd.write(link + "\n")                      
     fd.close()

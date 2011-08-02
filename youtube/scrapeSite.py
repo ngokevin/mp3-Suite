@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import urllib
 import sys
 import re
@@ -37,7 +39,7 @@ if __name__ == '__main__':
     print "\n" + str(len(li)) + " links found\n"
     print str(li) + "\n"
 
-    fd = open("Music", "a")
+    fd = open("MusicDL", "a")
     for link in li:
         fd.write(link + "\n");
     fd.close()

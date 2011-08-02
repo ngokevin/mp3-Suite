@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # uses the rapidshare api to upload a file and return download link
 
 import datetime
