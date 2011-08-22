@@ -1,0 +1,6 @@
+scrapeSite.py
+youtube2mp3 "$PWD/MusicDL" -d "/home/ngoke/Downloads/Music/youtube2mp3/listentothis/"
+
+scrapeSite.py http://reddit.com/r/electronicmusic
+youtube2mp3 "$PWD/MusicDL" -d "/home/ngoke/Downloads/Music/youtube2mp3/electronicmusic/"
+
