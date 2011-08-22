@@ -7,7 +7,10 @@
 # Author: Witold Baryluk
 # Author: Paweł Paprota
 # Author: Gergely Imreh
+# Author: Philipp Hagemeister <phihag@phihag.de>
 # License: Public domain code
+from __future__ import with_statement
+import contextlib
 import cookielib
 import ctypes
 import datetime
@@ -23,19 +26,29 @@ import os.path
 import re
 import socket
 import string
-import StringIO
 import subprocess
 import sys
 import time
 import urllib
 import urllib2
+import warnings
 import zlib
+
+try:
+	import cStringIO as StringIO
+except ImportError:
+	import StringIO
 
 # parse_qs was moved from the cgi module to the urlparse module recently.
 try:
 	from urlparse import parse_qs
 except ImportError:
 	from cgi import parse_qs
+
+try:
+	import lxml.etree
+except ImportError: # Python < 2.6
+	pass # Handled below
 
 std_headers = {
 	'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:2.0b11) Gecko/20100101 Firefox/4.0b11',
@@ -46,6 +59,119 @@ std_headers = {
 }
 
 simple_title_chars = string.ascii_letters.decode('ascii') + string.digits.decode('ascii')
+
+try:
+	import json
+except ImportError: # Python <2.6, use trivialjson (https://github.com/phihag/trivialjson):
+	import re
+	class json(object):
+		@staticmethod
+		def loads(s):
+			s = s.decode('UTF-8')
+			def raiseError(msg, i):
+				raise ValueError(msg + ' at position ' + str(i) + ' of ' + repr(s) + ': ' + repr(s[i:]))
+			def skipSpace(i, expectMore=True):
+				while i < len(s) and s[i] in ' \t\r\n':
+					i += 1
+				if expectMore:
+					if i >= len(s):
+						raiseError('Premature end', i)
+				return i
+			def decodeEscape(match):
+				esc = match.group(1)
+				_STATIC = {
+					'"': '"',
+					'\\': '\\',
+					'/': '/',
+					'b': unichr(0x8),
+					'f': unichr(0xc),
+					'n': '\n',
+					'r': '\r',
+					't': '\t',
+				}
+				if esc in _STATIC:
+					return _STATIC[esc]
+				if esc[0] == 'u':
+					if len(esc) == 1+4:
+						return unichr(int(esc[1:5], 16))
+					if len(esc) == 5+6 and esc[5:7] == '\\u':
+						hi = int(esc[1:5], 16)
+						low = int(esc[7:11], 16)
+						return unichr((hi - 0xd800) * 0x400 + low - 0xdc00 + 0x10000)
+				raise ValueError('Unknown escape ' + str(esc))
+			def parseString(i):
+				i += 1
+				e = i
+				while True:
+					e = s.index('"', e)
+					bslashes = 0
+					while s[e-bslashes-1] == '\\':
+						bslashes += 1
+					if bslashes % 2 == 1:
+						e += 1
+						continue
+					break
+				rexp = re.compile(r'\\(u[dD][89aAbB][0-9a-fA-F]{2}\\u[0-9a-fA-F]{4}|u[0-9a-fA-F]{4}|.|$)')
+				stri = rexp.sub(decodeEscape, s[i:e])
+				return (e+1,stri)
+			def parseObj(i):
+				i += 1
+				res = {}
+				i = skipSpace(i)
+				if s[i] == '}': # Empty dictionary
+					return (i+1,res)
+				while True:
+					if s[i] != '"':
+						raiseError('Expected a string object key', i)
+					i,key = parseString(i)
+					i = skipSpace(i)
+					if i >= len(s) or s[i] != ':':
+						raiseError('Expected a colon', i)
+					i,val = parse(i+1)
+					res[key] = val
+					i = skipSpace(i)
+					if s[i] == '}':
+						return (i+1, res)
+					if s[i] != ',':
+						raiseError('Expected comma or closing curly brace', i)
+					i = skipSpace(i+1)
+			def parseArray(i):
+				res = []
+				i = skipSpace(i+1)
+				if s[i] == ']': # Empty array
+					return (i+1,res)
+				while True:
+					i,val = parse(i)
+					res.append(val)
+					i = skipSpace(i) # Raise exception if premature end
+					if s[i] == ']':
+						return (i+1, res)
+					if s[i] != ',':
+						raiseError('Expected a comma or closing bracket', i)
+					i = skipSpace(i+1)
+			def parseDiscrete(i):
+				for k,v in {'true': True, 'false': False, 'null': None}.items():
+					if s.startswith(k, i):
+						return (i+len(k), v)
+				raiseError('Not a boolean (or null)', i)
+			def parseNumber(i):
+				mobj = re.match('^(-?(0|[1-9][0-9]*)(\.[0-9]*)?([eE][+-]?[0-9]+)?)', s[i:])
+				if mobj is None:
+					raiseError('Not a number', i)
+				nums = mobj.group(1)
+				if '.' in nums or 'e' in nums or 'E' in nums:
+					return (i+len(nums), float(nums))
+				return (i+len(nums), int(nums))
+			CHARMAP = {'{': parseObj, '[': parseArray, '"': parseString, 't': parseDiscrete, 'f': parseDiscrete, 'n': parseDiscrete}
+			def parse(i):
+				i = skipSpace(i)
+				i,res = CHARMAP.get(s[i], parseNumber)(i)
+				i = skipSpace(i, False)
+				return (i,res)
+			i,res = parse(0)
+			if i < len(s):
+				raise ValueError('Extra data at end of input (index ' + str(i) + ' of ' + repr(s) + ': ' + repr(s[i:]) + ')')
+			return res
 
 def preferredencoding():
 	"""Get preferred encoding.
@@ -286,6 +412,8 @@ class FileDownloader(object):
 	consoletitle:     Display progress in console window's titlebar.
 	nopart:           Do not use temporary .part files.
 	updatetime:       Use the Last-modified header to set output file timestamps.
+	writedescription: Write the video description to a .description file
+	writeinfojson:    Write the video description to a .info.json file
 	"""
 
 	params = None
@@ -481,6 +609,14 @@ class FileDownloader(object):
 		except:
 			pass
 
+	def report_writedescription(self, descfn):
+		""" Report that the description file is being written """
+		self.to_screen(u'[info] Writing video description to: %s' % descfn, ignore_encoding_errors=True)
+
+	def report_writeinfojson(self, infofn):
+		""" Report that the metadata file has been written """
+		self.to_screen(u'[info] Video description metadata as JSON to: %s' % infofn, ignore_encoding_errors=True)
+
 	def report_destination(self, filename):
 		"""Report destination filename."""
 		self.to_screen(u'[download] Destination: %s' % filename, ignore_encoding_errors=True)
@@ -566,6 +702,31 @@ class FileDownloader(object):
 		except (OSError, IOError), err:
 			self.trouble(u'ERROR: unable to create directories: %s' % str(err))
 			return
+
+		if self.params.get('writedescription', False):
+			try:
+				descfn = filename + '.description'
+				self.report_writedescription(descfn)
+				with contextlib.closing(open(descfn, 'wb')) as descfile:
+					descfile.write(info_dict['description'].encode('utf-8'))
+			except (OSError, IOError):
+				self.trouble(u'ERROR: Cannot write description file: %s' % str(descfn))
+				return
+
+		if self.params.get('writeinfojson', False):
+			infofn = filename + '.info.json'
+			self.report_writeinfojson(infofn)
+			try:
+				json.dump
+			except (NameError,AttributeError):
+				self.trouble(u'ERROR: No JSON encoder found. Update to Python 2.6+, setup a json module, or leave out --write-info-json.')
+				return
+			try:
+				with contextlib.closing(open(infofn, 'wb')) as infof:
+					json.dump(info_dict, infof)
+			except (OSError, IOError):
+				self.trouble(u'ERROR: Cannot write metadata to JSON file: %s' % str(infofn))
+				return
 
 		try:
 			success = self._do_download(filename, info_dict['url'].encode('utf-8'), info_dict.get('player_url', None))
@@ -1067,11 +1228,19 @@ class YoutubeIE(InfoExtractor):
 					pass
 
 		# description
-		video_description = 'No description available.'
-		if self._downloader.params.get('forcedescription', False):
-			mobj = re.search(r'<meta name="description" content="(.*)"(?:\s*/)?>', video_webpage)
-			if mobj is not None:
-				video_description = mobj.group(1)
+		try:
+			lxml.etree
+		except NameError:
+			video_description = u'No description available.'
+			if self._downloader.params.get('forcedescription', False) or self._downloader.params.get('writedescription', False):
+				mobj = re.search(r'<meta name="description" content="(.*)"(?:\s*/)?>', video_webpage)
+				if mobj is not None:
+					video_description = mobj.group(1).decode('utf-8')
+		else:
+			html_parser = lxml.etree.HTMLParser(encoding='utf-8')
+			vwebpage_doc = lxml.etree.parse(StringIO.StringIO(video_webpage), html_parser)
+			video_description = u''.join(vwebpage_doc.xpath('id("eow-description")//text()'))
+			# TODO use another parser
 
 		# token
 		video_token = urllib.unquote_plus(video_info['token'][0])
@@ -1079,8 +1248,11 @@ class YoutubeIE(InfoExtractor):
 		# Decide which formats to download
 		req_format = self._downloader.params.get('format', None)
 
-		if 'fmt_url_map' in video_info and len(video_info['fmt_url_map']) >= 1 and ',' in video_info['fmt_url_map'][0]:
-			url_map = dict(tuple(pair.split('|')) for pair in video_info['fmt_url_map'][0].split(','))
+		if 'url_encoded_fmt_stream_map' in video_info and len(video_info['url_encoded_fmt_stream_map']) >= 1:
+			url_data_strs = video_info['url_encoded_fmt_stream_map'][0].split(',')
+			url_data = [dict(pairStr.split('=') for pairStr in uds.split('&')) for uds in url_data_strs]
+			url_map = dict((ud['itag'], urllib.unquote(ud['url'])) for ud in url_data)
+			
 			format_limit = self._downloader.params.get('format_limit', None)
 			if format_limit is not None and format_limit in self._available_formats:
 				format_list = self._available_formats[self._available_formats.index(format_limit):]
@@ -1129,7 +1301,7 @@ class YoutubeIE(InfoExtractor):
 					'ext':		video_extension.decode('utf-8'),
 					'format':	(format_param is None and u'NA' or format_param.decode('utf-8')),
 					'thumbnail':	video_thumbnail.decode('utf-8'),
-					'description':	video_description.decode('utf-8'),
+					'description':	video_description,
 					'player_url':	player_url,
 				})
 			except UnavailableVideoError, err:
@@ -2506,10 +2678,7 @@ class FacebookIE(InfoExtractor):
 					pass
 
 		# description
-		video_description = 'No description available.'
-		if (self._downloader.params.get('forcedescription', False) and
-		    'description' in video_info):
-			video_description = video_info['description']
+		video_description = video_info.get('description', 'No description available.')
 
 		url_map = video_info['video_urls']
 		if len(url_map.keys()) > 0:
@@ -2562,6 +2731,75 @@ class FacebookIE(InfoExtractor):
 				})
 			except UnavailableVideoError, err:
 				self._downloader.trouble(u'\nERROR: unable to download video')
+
+class BlipTVIE(InfoExtractor):
+	"""Information extractor for blip.tv"""
+
+	_VALID_URL = r'^(?:https?://)?(?:\w+\.)?blip.tv(/.+)$'
+	_URL_EXT = r'^.*\.([a-z0-9]+)$'
+
+	@staticmethod
+	def suitable(url):
+		return (re.match(BlipTVIE._VALID_URL, url) is not None)
+
+	def report_extraction(self, file_id):
+		"""Report information extraction."""
+		self._downloader.to_screen(u'[blip.tv] %s: Extracting information' % file_id)
+
+	def _simplify_title(self, title):
+		res = re.sub(ur'(?u)([^%s]+)' % simple_title_chars, ur'_', title)
+		res = res.strip(ur'_')
+		return res
+
+	def _real_extract(self, url):
+		mobj = re.match(self._VALID_URL, url)
+		if mobj is None:
+			self._downloader.trouble(u'ERROR: invalid URL: %s' % url)
+			return
+
+		json_url = url + ('&' if '?' in url else '?') + 'skin=json&version=2&no_wrap=1'
+		request = urllib2.Request(json_url)
+		self.report_extraction(mobj.group(1))
+		try:
+			json_code = urllib2.urlopen(request).read()
+		except (urllib2.URLError, httplib.HTTPException, socket.error), err:
+			self._downloader.trouble(u'ERROR: unable to download video info webpage: %s' % str(err))
+			return
+		try:
+			json_data = json.loads(json_code)
+			data = json_data['Post'] if 'Post' in json_data else json_data
+
+			upload_date = datetime.datetime.strptime(data['datestamp'], '%m-%d-%y %H:%M%p').strftime('%Y%m%d')
+			video_url = data['media']['url']
+			umobj = re.match(self._URL_EXT, video_url)
+			if umobj is None:
+				raise ValueError('Can not determine filename extension')
+			ext = umobj.group(1)
+
+			self._downloader.increment_downloads()
+
+			info = {
+				'id': data['item_id'],
+				'url': video_url,
+				'uploader': data['display_name'],
+				'upload_date': upload_date,
+				'title': data['title'],
+				'stitle': self._simplify_title(data['title']),
+				'ext': ext,
+				'format': data['media']['mimeType'],
+				'thumbnail': data['thumbnailUrl'],
+				'description': data['description'],
+				'player_url': data['embedUrl']
+			}
+		except (ValueError,KeyError), err:
+			self._downloader.trouble(u'ERROR: unable to parse video information: %s' % repr(err))
+			return
+
+		try:
+			self._downloader.process_info(info)
+		except UnavailableVideoError, err:
+			self._downloader.trouble(u'\nERROR: unable to download video')
+
 
 class PostProcessor(object):
 	"""Post Processor class.
@@ -2723,7 +2961,7 @@ if __name__ == '__main__':
 		# Parse command line
 		parser = optparse.OptionParser(
 			usage='Usage: %prog [options] url...',
-			version='2011.03.29',
+			version='2011.07.09-phihag',
 			conflict_handler='resolve',
 		)
 
@@ -2813,6 +3051,12 @@ if __name__ == '__main__':
 		filesystem.add_option('--no-mtime',
 				action='store_false', dest='updatetime',
 				help='do not use the Last-modified header to set the file modification time', default=True)
+		filesystem.add_option('--write-description',
+				action='store_true', dest='writedescription',
+				help='write video description to a .description file', default=False)
+		filesystem.add_option('--write-info-json',
+				action='store_true', dest='writeinfojson',
+				help='write video metadata to a .info.json file', default=False)
 		parser.add_option_group(filesystem)
 
 		postproc = optparse.OptionGroup(parser, 'Post-processing Options')
@@ -2911,6 +3155,7 @@ if __name__ == '__main__':
 		yahoo_search_ie = YahooSearchIE(yahoo_ie)
 		deposit_files_ie = DepositFilesIE()
 		facebook_ie = FacebookIE()
+		bliptv_ie = BlipTVIE()
 		generic_ie = GenericIE()
 
 		# File downloader
@@ -2949,6 +3194,8 @@ if __name__ == '__main__':
 			'consoletitle': opts.consoletitle,
 			'nopart': opts.nopart,
 			'updatetime': opts.updatetime,
+			'writedescription': opts.writedescription,
+			'writeinfojson': opts.writeinfojson,
 			})
 		fd.add_info_extractor(youtube_search_ie)
 		fd.add_info_extractor(youtube_pl_ie)
@@ -2963,6 +3210,7 @@ if __name__ == '__main__':
 		fd.add_info_extractor(yahoo_search_ie)
 		fd.add_info_extractor(deposit_files_ie)
 		fd.add_info_extractor(facebook_ie)
+		fd.add_info_extractor(bliptv_ie)
 
 		# This must come last since it's the
 		# fallback if none of the others work
