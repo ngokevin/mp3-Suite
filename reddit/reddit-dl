@@ -1,6 +1,8 @@
 scrapeSite.py
-youtube2mp3 "$PWD/MusicDL" -d "/home/ngoke/Downloads/Music/youtube2mp3/listentothis/"
+chmod 755 MusicDL
+youtube2mp3 -d "/home/ngoke/Downloads/Music/youtube2mp3/listentothis/" "$PWD/MusicDL" 
 
 scrapeSite.py http://reddit.com/r/electronicmusic
-youtube2mp3 "$PWD/MusicDL" -d "/home/ngoke/Downloads/Music/youtube2mp3/electronicmusic/"
+chmod 755 MusicDL
+youtube2mp3 -d "/home/ngoke/Downloads/Music/youtube2mp3/electronicmusic/" "$PWD/MusicDL" 
 
