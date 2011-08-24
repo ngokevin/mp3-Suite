@@ -1,5 +1,6 @@
 #! /bin/sh
-# Creates tarball, uploads to filevo, and posts to Reddit. Main method for whole process. 
+# Creates tarball, uploads to Rapidshare, and posts to Reddit.
+# All parameters below are necessary  
 
 while getopts ":a:b:c:d:h:l:s:p:" opt; do
     case $opt in
@@ -40,7 +41,6 @@ cd $download_dir
 date=`date +%F`                                        
 
 # Gets all files from today and tarballs them
-#find $download_dir -daystart -ctime 0 -not -wholename $download_dir -print0 | tar -cvf output.tar --no-wildcards --null -T -
 find -daystart -ctime 0 -not -name . -print0 | xargs -0 zip $date.zip --no-wild
 
 # upload zip to rapidshare
@@ -49,7 +49,7 @@ links=`python "${python_dir}uploadToRapidshare.py" -u $rapid_username -p $rapid_
 # post link to reddit
 post="Hello $subreddit,         
     
-My name is prestobot, a set of scripts that scrapes the front page of a subreddit for youtube links daily. I download these songs and convert them to .mp3. Then,  I zip all of these files together, upload them to Rapidshare, and post the download links to Reddit. My source code can be found at github.com/ngokevin/mp3-Suite. I am pleased to bring to you today's top songs for download.          
+I am prestobot, a set of scripts that scrapes the front page of a subreddit for youtube links. Everyday, I download and convert songs posted via YouTube to .mp3. I then zip all of these files together, upload them to Rapidshare (since they have an API), and finally post the download links to Reddit. Source code at github.com/ngokevin/mp3-Suite. I am pleased to bring to you today's top songs for download.          
 
 
 ==Links==          
@@ -57,5 +57,5 @@ My name is prestobot, a set of scripts that scrapes the front page of a subreddi
 
 $links"
 
-python "${python_dir}postToReddit.py" -u $reddit_username -p $reddit_password -s $subreddit -k "self" -t "prestobot $date: download link to today's top songs for $subreddit" -l "$post"
+python "${python_dir}postToReddit.py" -u $reddit_username -p $reddit_password -s $subreddit -k "self" -t "prestobot $date: download link for today's popular songs for $subreddit" -l "$post"
 

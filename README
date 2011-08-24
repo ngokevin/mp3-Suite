@@ -19,9 +19,9 @@ youtube2mp3:
     Remember to first change the default download directory within the source
     Can have open a flat file with multiple youtube links for batch conversion
 
-presto.sh:
-    My whole usage for this suite was to scrape reddit.com/r/listentothis everyday to populate my music library. With presto, I can give back to the site. It tarballs
-files downloaded today (by checking the last_modified), uploads it to Rapidshare via their API, and posts the Rapidshare links to Reddit via the Reddit API.
+prestobot:
+    My whole usage for this suite was to scrape reddit.com/r/listentothis everyday to populate my music library (automated piracy system). With prestobot, I can give back to the site. It tarballs
+files downloaded today (by checking the last_modified), uploads it to Rapidshare via their API, and posts the Rapidshare links to Reddit via the Reddit API. It requires many parameters (rapidshare user/pw, reddit usr/pw, subreddit, song directory, path where all the other scripts are contained, fileserver/host prefix...)
 
 Examples:
     python scrapeSite.py && ./youtube2mp3 Music
