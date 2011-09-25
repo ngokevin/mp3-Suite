@@ -76,7 +76,7 @@ def upload_and_list_files(username, password, filename='', sleep=True):
 
     # upload
     if filename:
-        response = addjob(username, password, filename)
+        response = add_job(username, password, filename)
 
     # make sure it finishes before grab link
     if sleep is True:
