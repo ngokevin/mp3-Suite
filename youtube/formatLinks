@@ -1,0 +1,68 @@
+#! /bin/bash
+# Reads a list of YouTube links and cats them to another file as formatted links for Reddit
+
+# command line arguments to specify directory if desired
+download_dir="/home/ngoke/Downloads/Music/youtube2mp3/"
+thread=1
+to_format=${!#}
+
+# Gets title of video to appropriately name the .mp3 output
+prefix=`youtube-dl -e "$1"`
+
+if [ $# -eq 0 ];
+then
+    echo "Usage: formatLinks [FILE]"; 
+    exit 1;
+fi
+
+if [ ! -d $download_dir ];
+then
+    dir_no_ending_slash=`echo $download_dir | sed s/.$//`
+    mkdir $dir_no_ending_slash
+fi
+
+# Convert all if batch download file found
+if test -f $to_convert 
+then   
+
+    echo "$to_convert found"
+    
+    # Loop through each link in file
+    for line in $(cat $to_convert | sort | uniq)
+    do
+        #Check to see if song does not already exist
+        prefix=`youtube-dl -e "$line"`
+        suffix=".mp3"
+        title=$prefix$suffix
+        title="$dir$title"
+
+        echo "Converting $prefix"
+
+        if [ ! -f "$title" ]
+        then
+            if [ ${thread} -eq 0 ];
+            then
+                toMP3 $line $download_dir &
+            else
+                toMP3 $line $download_dir
+            fi 
+        else
+            echo "$prefix$suffix already exists"
+        fi
+    done
+
+    # Empty file
+    cat /dev/null > $to_convert
+
+# Convert if single link given
+else
+    if [ ${thread} -eq 0 ];
+    then
+        toMP3 $to_convert $download_dir & 
+    else
+        toMP3 $to_convert $download_dir 
+    fi
+fi
+exit
+
+

@@ -44,7 +44,7 @@ date=`date +%F`
 find -daystart -ctime 0 -not -name . -print0 | xargs -0 zip $date.zip --no-wild
 
 # upload zip to rapidshare
-links=`python "${python_dir}uploadToRapidshare.py" -u $rapid_username -p $rapid_password -f "${host}${date}.zip"`
+links=`python "${python_dir}rapidshare.py" -u $rapid_username -p $rapid_password -f "${host}${date}.zip"`
 
 # post link to reddit
 post="Hello $subreddit,         
@@ -57,5 +57,5 @@ I am prestobot, a set of scripts that scrapes the front page of a subreddit for 
 
 $links"
 
-python "${python_dir}postToReddit.py" -u $reddit_username -p $reddit_password -s $subreddit -k "self" -t "prestobot $date: download link for today's popular songs for $subreddit" -l "$post"
+python "${python_dir}reddit.py" -u $reddit_username -p $reddit_password -s $subreddit -k "self" -t "prestobot $date: download link for today's popular songs for $subreddit" -l "$post"
 

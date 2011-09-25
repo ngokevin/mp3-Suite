@@ -9,7 +9,7 @@ import urllib2
 import cookielib
 from optparse import OptionParser
 
-def upload(username, password, filename):
+def add_job(username, password, filename):
     """ uploads a file (via url) to rapidshare. returns status message """
 
     # compose url for api call
@@ -23,7 +23,7 @@ def upload(username, password, filename):
     response = opener.open(request)
     return response.read()
 
-def getFileLinks(username, password):
+def list_files(username, password):
     """ get list of all files as download links currently within rapidshare account """
 
     # compose url for api call
@@ -50,7 +50,7 @@ def getFileLinks(username, password):
     final.reverse()
     return final
 
-def deleteFile(username, password, fileid):
+def delete_files(username, password, fileid):
     """ deletes a file from rapidshare account given fileid """
     
     cookie_jar = cookielib.MozillaCookieJar()
@@ -67,7 +67,7 @@ def deleteFile(username, password, fileid):
     response = opener.open(request)
     return response.read()
 
-def uploadAndGetLinks(username, password, filename='', sleep=True):
+def upload_and_list_files(username, password, filename='', sleep=True):
     """ uploads a file and gets updated link list """
 
     cookie_jar = cookielib.MozillaCookieJar()
@@ -76,14 +76,14 @@ def uploadAndGetLinks(username, password, filename='', sleep=True):
 
     # upload
     if filename:
-        response = upload(username, password, filename)
+        response = addjob(username, password, filename)
 
     # make sure it finishes before grab link
     if sleep is True:
         time.sleep(900)
 
     # get all current links
-    links = getFileLinks(username, password)
+    links = list_files(username, password)
     links = format_links(links)
     return links
 
@@ -95,7 +95,24 @@ def format_links(links):
         string += link + '''    
 '''
     return string
-        
+
+def list_jobs(username, password, cmd):
+    """ 
+    give a detailed list of all currently stored jobs
+    """
+    cookie_jar = cookielib.MozillaCookieJar()
+    opener = urllib2.build_opener (urllib2.HTTPCookieProcessor(cookie_jar), urllib2.HTTPHandler())
+    urllib2.install_opener(opener)
+
+    request_url = "http://api.rapidshare.com/cgi-bin/rsapi.cgi?sub=remotegets"
+    request_url += "&login=" + username
+    request_url += "&password=" + password
+    request_url += "&cmd=listjobs"
+
+    request = urllib2.Request(request_url)
+    response = opener.open(request)
+    return response.read()
+    
 if __name__ == '__main__':
 
     # get current date in y-m-d format as a default option for filename
@@ -118,4 +135,4 @@ if __name__ == '__main__':
     opener = urllib2.build_opener (urllib2.HTTPCookieProcessor(cookie_jar), urllib2.HTTPHandler())
     urllib2.install_opener(opener)
 
-    print uploadAndGetLinks(options.username, options.password, options.filename, options.sleep)
+    print upload_and_list_files(options.username, options.password, options.filename, options.sleep)
