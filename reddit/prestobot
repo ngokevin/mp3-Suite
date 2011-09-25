@@ -47,9 +47,9 @@ find -daystart -ctime 0 -not -name . -print0 | xargs -0 zip $date.zip --no-wild
 links=`python "$python_dir"rapidshare.py -u $rapid_username -p $rapid_password -f "$host$date".zip`
 
 # post link to reddit
-post="Hello $subreddit,         
+post="Hi $subreddit,         
     
-I am prestobot, a set of scripts that scrapes the front page of a subreddit for youtube links. Everyday, I download and convert songs posted via YouTube to .mp3. I then zip all of these files together, upload them to Rapidshare (since they have an API), and finally post the download links to Reddit. Source code at github.com/ngokevin/mp3-Suite. I am pleased to bring to you today's top songs for download.          
+I'm prestobot, a set of scripts that scrapes the front page of a subreddit for youtube links. Everyday, I download music posted via Youtube on the front page. I compress all of these files together, upload them to Rapidshare (since they readily have an API, writing a Mediafire library is beyond my abilities), and post the download links to Reddit. You can use me for music discovery and consider these songs samplers. Support the artists you really enjoy by buying their albums. Here are today's currently hot songs.
 
 
 ==Links==          
