@@ -41,10 +41,10 @@ cd $download_dir
 date=`date +%F | tr -d '\n'`                                        
 
 # Gets all files from today and tarballs them
-find -daystart -ctime 0 -not -name . -print0 | xargs -0 zip $date.zip --no-wild
+#find -daystart -ctime 0 -not -name . -print0 | xargs -0 zip $date.zip --no-wild
 
 # upload zip to rapidshare
-links=`python "$python_dir"rapidshare.py -u $rapid_username -f "$host$date".zip -p $rapid_password`
+#links=`python "$python_dir"rapidshare.py -u $rapid_username -f "$host$date".zip -p $rapid_password`
 songs="`find -daystart -ctime 0 -not -name . -print0 | sed 's/\.\//\n/g'`"
 
 
@@ -55,7 +55,7 @@ I'm prestobot, a set of scripts that scrapes the front page of a subreddit for y
 
 ==Today's Songs==
 
-$songs
+`find -daystart -ctime 0 -not -name . -print0 | sed 's/\.\//  \n/g' | sed 's/\.mp3//g' | sed 's/..........\.zip//g'`
 
 ==Links==          
 
