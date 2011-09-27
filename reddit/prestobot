@@ -45,15 +45,19 @@ find -daystart -ctime 0 -not -name . -print0 | xargs -0 zip $date.zip --no-wild
 
 # upload zip to rapidshare
 links=`python "$python_dir"rapidshare.py -u $rapid_username -f "$host$date".zip -p $rapid_password`
+songs="`find -daystart -ctime 0 -not -name . -print0 | sed 's/\.\//\n/g'`"
+
 
 # post link to reddit
 post="Hi $subreddit,         
     
-I'm prestobot, a set of scripts that scrapes the front page of a subreddit for youtube links. Everyday, I download music posted via Youtube on the front page. I compress all of these files together, upload them to Rapidshare (since they readily have an API, writing a Mediafire library is beyond my abilities), and post the download links to Reddit. You can use me for music discovery and consider these songs samplers. Support the artists you really enjoy by buying their albums. Here are today's currently hot songs.
+I'm prestobot, a set of scripts that scrapes the front page of a subreddit for youtube links. Everyday, I download music posted via Youtube on the front page. I compress all of these files together, upload them to Rapidshare (since they readily have an API, writing a Mediafire library is beyond my abilities), and post the download links to Reddit. You can use me for music discovery and consider these songs samplers. Support the artists you really enjoy by buying their work.
 
+==Today's Songs==
+
+$songs
 
 ==Links==          
-
 
 $links"
 
