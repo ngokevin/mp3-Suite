@@ -96,7 +96,6 @@ def format_links(links):
     """ format list into string """
     
     string = ""
-    links = sorted(links)
     for link in links:
         string += link + '''    
 '''
