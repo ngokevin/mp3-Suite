@@ -26,6 +26,10 @@ def add_job(username, password, filename):
 def list_files(username, password):
     """ get list of all files as download links currently within rapidshare account """
 
+    cookie_jar = cookielib.MozillaCookieJar()
+    opener = urllib2.build_opener (urllib2.HTTPCookieProcessor(cookie_jar), urllib2.HTTPHandler())
+    urllib2.install_opener(opener)
+
     # compose url for api call
     request_url = "http://api.rapidshare.com/cgi-bin/rsapi.cgi?sub=listfiles"
     request_url += "&login=" + username
@@ -47,6 +51,7 @@ def list_files(username, password):
         link = "https://rapidshare.com/files/" + link[0] + "/" + link[1] 
         final.append(link)
 
+    final = sorted(final, key=lambda dl_link: dl_link[-14:-10] + dl_link[-9:-7] + dl_link[-6:-4])
     final.reverse()
     return final
 
@@ -91,12 +96,13 @@ def format_links(links):
     """ format list into string """
     
     string = ""
+    links = sorted(links)
     for link in links:
         string += link + '''    
 '''
     return string
 
-def list_jobs(username, password, cmd):
+def list_jobs(username, password):
     """ 
     give a detailed list of all currently stored jobs
     """
