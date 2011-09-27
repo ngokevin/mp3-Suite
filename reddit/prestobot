@@ -38,13 +38,13 @@ while getopts ":a:b:c:d:h:l:s:p:" opt; do
 done
 
 cd $download_dir
-date=`date +%F`                                        
+date=`date +%F | tr -d '\n'`                                        
 
 # Gets all files from today and tarballs them
 find -daystart -ctime 0 -not -name . -print0 | xargs -0 zip $date.zip --no-wild
 
 # upload zip to rapidshare
-links=`python "$python_dir"rapidshare.py -u $rapid_username -p $rapid_password -f "$host$date".zip`
+links=`python "$python_dir"rapidshare.py -u $rapid_username -f "$host$date".zip -p $rapid_password`
 
 # post link to reddit
 post="Hi $subreddit,         
